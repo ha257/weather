@@ -1,14 +1,117 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Wetter Heidelberg</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 0 auto;
+      background: #f0f8ff;
+      color: #333;
+      padding: 15px;
+    }
+    h2 {
+      text-align: center;
+    }
+    .current-weather {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      font-size: 1.2em;
+      margin-bottom: 20px;
+    }
+    .current-weather img {
+      width: 60px;
+      height: 60px;
+    }
+    .forecast {
+      display: flex;
+      justify-content: space-between;
+    }
+    .day {
+      text-align: center;
+      background: #e1f0ff;
+      padding: 10px;
+      border-radius: 8px;
+      width: 60px;
+      font-size: 0.85em;
+    }
+    .day img {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 5px;
+    }
+    .temp-day {
+      color: #d94e2a;
+      font-weight: bold;
+    }
+    .temp-night {
+      color: #2a4ed9;
+    }
+  </style>
 </head>
 <body>
-  <iframe
-    src="https://weatherwidget.io/w/?location=heidelberg,de&theme=original"
-    style="width: 100%; height: 250px; border: none; overflow: hidden;"
-    allowtransparency="true">
-  </iframe>
+
+  <h2>Wetter Heidelberg</h2>
+
+  <div class="current-weather" id="current">
+    <!-- Aktuelles Wetter hier -->
+  </div>
+
+  <div class="forecast" id="forecast">
+    <!-- 5-Tage Vorhersage hier -->
+  </div>
+
+  <script>
+    const apiKey = "821b4049a5696efe192f0449b709076e";
+    const lat = 49.3988;  // Breitengrad Heidelberg
+    const lon = 8.6724;   // Längengrad Heidelberg
+
+    function iconUrl(icon) {
+      return `https://openweathermap.org/img/wn/${icon}@2x.png`;
+    }
+
+    function getWeekday(dt) {
+      const date = new Date(dt * 1000);
+      return date.toLocaleDateString('de-DE', { weekday: 'short' });
+    }
+
+    fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=de`)
+      .then(res => res.json())
+      .then(data => {
+        const current = data.current;
+        const currentDiv = document.getElementById('current');
+        currentDiv.innerHTML = `
+          <img src="${iconUrl(current.weather[0].icon)}" alt="${current.weather[0].description}">
+          <div>
+            <div><strong>${Math.round(current.temp)}°C</strong></div>
+            <div>${current.weather[0].description}</div>
+          </div>
+        `;
+
+        const forecastDiv = document.getElementById('forecast');
+        forecastDiv.innerHTML = '';
+        for(let i=1; i<=5; i++) {
+          const day = data.daily[i];
+          forecastDiv.innerHTML += `
+            <div class="day">
+              <div><strong>${getWeekday(day.dt)}</strong></div>
+              <img src="${iconUrl(day.weather[0].icon)}" alt="${day.weather[0].description}">
+              <div class="temp-day">🌞 ${Math.round(day.temp.day)}°C</div>
+              <div class="temp-night">🌙 ${Math.round(day.temp.night)}°C</div>
+            </div>
+          `;
+        }
+      })
+      .catch(err => {
+        document.body.innerHTML = "<p>Fehler beim Laden der Wetterdaten.</p>";
+        console.error(err);
+      });
+  </script>
+
 </body>
 </html>
+
